@@ -36,10 +36,26 @@ func IsDNA(seq string) bool {
 	return true
 }
 
+// accepts a string and checks if it is a valid RNA sequence.
 func IsRNA(seq string) bool {
 	for _, base := range seq {
 		switch base {
 		case 'A', 'C', 'U', 'G':
+			continue
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// accepts a string and checks if it uses valid dot-bracket notation.
+// See the `fold/linear/secondary_structure` package for more info
+// on dot-bracket notation.
+func IsValidDotBracketStructure(seq string) bool {
+	for _, base := range seq {
+		switch base {
+		case '(', ')', '.':
 			continue
 		default:
 			return false

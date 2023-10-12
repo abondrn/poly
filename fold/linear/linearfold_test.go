@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/allyourbasepair/rbscalculator/energy_params"
-	"github.com/allyourbasepair/rbscalculator/mfe"
+	"github.com/TimothyStiles/poly/fold/linear/energy_params"
+	"github.com/TimothyStiles/poly/fold/linear/mfe"
 )
 
 func ExampleCONTRAFoldV2() {

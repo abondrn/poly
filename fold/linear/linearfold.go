@@ -7,9 +7,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/allyourbasepair/rbscalculator/energy_params"
-	"github.com/allyourbasepair/rbscalculator/mfe"
-	"github.com/allyourbasepair/rbscalculator/secondary_structure"
+	"github.com/TimothyStiles/poly/fold/linear/energy_params"
+	"github.com/TimothyStiles/poly/fold/linear/mfe"
+	"github.com/TimothyStiles/poly/fold/linear/secondary_structure"
 )
 
 /******************************************************************************
