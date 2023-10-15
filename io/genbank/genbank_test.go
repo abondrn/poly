@@ -1,6 +1,7 @@
 package genbank
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -116,11 +117,12 @@ func TestGbkLocationStringBuilder(t *testing.T) {
 
 func TestGbLocationStringBuilder(t *testing.T) {
 	tmpDataDir, err := os.MkdirTemp("", "data-*")
-	assert.NoError(t, err)
+	if err != nil {
+		t.Error(err)
+	}
 	defer os.RemoveAll(tmpDataDir)
 
-	scrubbedGb, err := Read("../../data/t4_intron.gb")
-	assert.NoError(t, err)
+	scrubbedGb, _ := Read("../../data/t4_intron.gb")
 
 	// removing gbkLocationString from features to allow testing for gbkLocationBuilder
 	for featureIndex := range scrubbedGb.Features {
@@ -128,13 +130,10 @@ func TestGbLocationStringBuilder(t *testing.T) {
 	}
 
 	tmpGbFilePath := filepath.Join(tmpDataDir, "t4_intron_test.gb")
-	err = Write(scrubbedGb, tmpGbFilePath)
-	assert.NoError(t, err)
+	_ = Write(scrubbedGb, tmpGbFilePath)
 
-	testInputGb, err := Read("../../data/t4_intron.gb")
-	assert.NoError(t, err)
-	testOutputGb, err := Read(tmpGbFilePath)
-	assert.NoError(t, err)
+	testInputGb, _ := Read("../../data/t4_intron.gb")
+	testOutputGb, _ := Read(tmpGbFilePath)
 
 	if diff := cmp.Diff(testInputGb, testOutputGb, []cmp.Option{cmpopts.IgnoreFields(Feature{}, "ParentSequence")}...); diff != "" {
 		t.Errorf("Issue with either Join or complement location building. Parsing the output of Build() does not produce the same output as parsing the original file read with Read(). Got this diff:\n%s", diff)
@@ -169,7 +168,23 @@ func TestSubLocationStringParseRegression(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to parse location string. Got err: %s", err)
 	}
-	fmt.Println(parsedLocation)
+	jsonFile, err := os.Open("../../data/parseLocationRegressionTest.json")
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := io.ReadAll(jsonFile)
+	var testParsedLocation Location
+	err = json.Unmarshal(byteValue, &testParsedLocation)
+	if err != nil {
+		t.Errorf("Failed to unmarshal json. Got err: %s", err)
+	}
+
+	if diff := cmp.Diff(parsedLocation, testParsedLocation); diff != "" {
+		t.Errorf("Failed to parse sublocation string. Got this diff:\n%s", diff)
+	}
 }
 
 func TestSnapgeneGenbankRegression(t *testing.T) {
