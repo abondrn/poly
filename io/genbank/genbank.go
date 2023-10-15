@@ -811,8 +811,8 @@ func getSourceOrganism(metadataData []string) (string, string, []string) {
 func parseLocation(locationString string) (Location, error) {
 	var location Location
 	location.GbkLocationString = locationString
-	if !strings.ContainsAny(locationString, "(") { // Case checks for simple expression of x..x
-		if !strings.ContainsAny(locationString, ".") { //Case checks for simple expression x
+	if !(strings.ContainsAny(locationString, "(")) { // Case checks for simple expression of x..x
+		if !(strings.ContainsAny(locationString, ".")) { //Case checks for simple expression x
 			position, err := strconv.Atoi(locationString)
 			if err != nil {
 				return Location{}, err
@@ -841,34 +841,26 @@ func parseLocation(locationString string) (Location, error) {
 			if strings.ContainsAny(expression, "(") {
 				firstInnerParentheses := strings.Index(expression, "(")
 				ParenthesesCount := 1
-				prevSubLocationStart := 0
-				for i := firstInnerParentheses+1; i < len(expression); i++ { // "(" is at 0, so we start at 1
-					switch expression[i] {
-					case '(':
+				comma := 0
+				for i := 1; ParenthesesCount > 0; i++ { // "(" is at 0, so we start at 1
+					comma = i
+					switch expression[firstInnerParentheses+i] {
+					case []byte("(")[0]:
 						ParenthesesCount++
-					case ')':
+					case []byte(")")[0]:
 						ParenthesesCount--
-					case ',':
-						if ParenthesesCount == 0 {
-							parsedSubLocation, err := parseLocation(expression[prevSubLocationStart:i])
-							if err != nil {
-								return Location{}, err
-							}
-							parsedSubLocation.GbkLocationString = locationString
-							location.SubLocations = append(location.SubLocations, parsedSubLocation)
-							prevSubLocationStart = i+1
-						}
 					}
 				}
-				if ParenthesesCount != 0 {
-					return Location{}, fmt.Errorf("Unbalanced parentheses")
-				}
-				parsedSubLocation, err := parseLocation(expression[prevSubLocationStart:])
+				parseLeftLocation, err := parseLocation(expression[:firstInnerParentheses+comma+1])
 				if err != nil {
 					return Location{}, err
 				}
-				parsedSubLocation.GbkLocationString = locationString
-				location.SubLocations = append(location.SubLocations, parsedSubLocation)
+				parseRightLocation, err := parseLocation(expression[2+firstInnerParentheses+comma:])
+				if err != nil {
+					return Location{}, err
+				}
+
+				location.SubLocations = append(location.SubLocations, parseLeftLocation, parseRightLocation)
 			} else { // This is the default join(x..x,x..x)
 				for _, numberRange := range strings.Split(expression, ",") {
 					joinLocation, err := parseLocation(numberRange)
@@ -906,7 +898,6 @@ func parseLocation(locationString string) (Location, error) {
 
 	return location, nil
 }
-
 
 // buildMetaString is a helper function to build the meta section of genbank files.
 func buildMetaString(name string, data string) string {
