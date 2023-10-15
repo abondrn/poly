@@ -216,32 +216,27 @@ type BasePairType int
 const (
 	// CG occurs when the base C (on the five prime end) binds to the base G
 	// (on the three prime end)
-	CG BasePairType = 0
+	CG BasePairType = iota
 	// GC occurs when the base G (on the five prime end) binds to the base C
 	// (on the three prime end)
-	GC = 1
+	GC
 	// GU occurs when the base G (on the five prime end) binds to the base U
 	// (on the three prime end)
-	GU = 2
+	GU
 	// UG occurs when the base U (on the five prime end) binds to the base G
 	// (on the three prime end)
-	UG = 3
+	UG
 	// Au occurs when the base A (on the five prime end) binds to the base U
 	// (on the three prime end)
-	AU = 4
+	AU
 	// UA occurs when the base U (on the five prime end) binds to the base A
 	// (on the three prime end)
-	UA = 5
+	UA
 	// NoPair denotes that two bases don't pair
 	NoPair = -1
 )
 
 var (
-	nucleotideAEncodedTypeMap = map[byte]BasePairType{'U': AU}
-	nucleotideCEncodedTypeMap = map[byte]BasePairType{'G': CG}
-	nucleotideGEncodedTypeMap = map[byte]BasePairType{'C': GC, 'U': GU}
-	nucleotideUEncodedTypeMap = map[byte]BasePairType{'A': UA, 'G': UG}
-
 	// BasePairEncodedTypeMap is a map that encodes a base pair to its numerical
 	// representation that is used to access the values of the energy parameters
 	// in the `EnergyParams` struct.
@@ -270,10 +265,10 @@ var (
 	// when a value in this map isn't found. Please consider using that function
 	// to access this map.
 	BasePairEncodedTypeMap = map[byte]map[byte]BasePairType{
-		'A': nucleotideAEncodedTypeMap,
-		'C': nucleotideCEncodedTypeMap,
-		'G': nucleotideGEncodedTypeMap,
-		'U': nucleotideUEncodedTypeMap,
+		'A': {'U': AU},
+		'C': {'G': CG},
+		'G': {'C': GC, 'U': GU},
+		'U': {'A': UA, 'G': UG},
 	}
 
 	// NucleotideEncodedIntMap is a map that encodes a nucleotide to its numerical

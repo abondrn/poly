@@ -1506,12 +1506,8 @@ func internal_nuc_score(nuci, currentNucleotide int) float64 {
 	return internal_1x1_nucleotides[nuci*NOTON+currentNucleotide]
 }
 
-// var (
-// 	if_tetraloops, if_hexaloops, if_triloops []int
-// )
 
-// func v_init_tetra_hex_tri(sequence string, seq_length int, if_tetraloops, if_hexaloops, if_triloops *([]int)) {
-
+func _init_tetra_hex_tri(sequence string, seq_length int, if_tetraloops, if_hexaloops, if_triloops *([]int)) {
 // 	lastTetraLoopStartPos := seq_length - 5
 
 // 	// TetraLoops
@@ -1591,7 +1587,7 @@ func internal_nuc_score(nuci, currentNucleotide int) float64 {
 // 			(*if_hexaloops)[i] = hexaLoopEnergy
 // 		}
 // 	}
-// }
+}
 
 func v_score_hairpin(i, j, nuci, nuci1, nucj_1, nucj int, sequence string) int {
 

@@ -49,8 +49,18 @@ const (
 
 	exteriorLoopUnpairedNucleotide          byte = 'e'
 	interiorLoopUnpairedNucleotide          byte = 'i'
-	hairpinLoopNucleotide                   byte = 'h'
+	hairpinLoopUnpairedNucleotide           byte = 'h'
 	multiLoopSingleStrandedRegionNucleotide byte = 'm'
+	
+	// bpRNA codes (Pseudoknot K excluded), see https://bprna.cgrb.oregonstate.edu/help.php for details
+	bulgeNucleotide        byte = 'B'
+	hairpinLoopNucleotide  byte = 'H'
+	multiloopNucleotide    byte = 'M'
+	internalLoopNucleotide byte = 'I'
+	// exterior features
+	danglingEndsNucleotide byte = 'E'
+	externalLoopNucleotide byte = 'X'
+	stemNucleotide         byte = 'S'
 )
 
 // parseCompound holds all information needed to compute the annotated structure
@@ -382,7 +392,7 @@ func hairpin(pc *parseCompound, closingFivePrimeIdx, closingThreePrimeIdx int,
 	// keep track of whether the hairpin has single stranded nucleotides
 	hairpinHasSingleStrandedNucleotides := false
 	for i := closingFivePrimeIdx + 1; i < closingThreePrimeIdx; i++ {
-		pc.annotatedStructure[i] = hairpinLoopNucleotide
+		pc.annotatedStructure[i] = hairpinLoopUnpairedNucleotide
 		hairpinHasSingleStrandedNucleotides = true
 	}
 
