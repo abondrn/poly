@@ -17,6 +17,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.13 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
