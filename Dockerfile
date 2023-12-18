@@ -1,6 +1,6 @@
 FROM continuumio/miniconda3
 
-RUN conda install -c bioconda --yes minimap2 samtools diamond blast infernal
+RUN conda install -c bioconda --yes minimap2 samtools diamond>=2.0.13 blast>=2.10.1 infernal
 
 # Change your version here
 ENV GO_VERSION=1.18
@@ -17,6 +17,13 @@ WORKDIR $HOME
 
 RUN git clone https://github.com/mmcguffi/pLannotate.git
 
+ENV PLANNOTATE_VERSION=v1.2.0
+ENV DB_LOC=https://github.com/mmcguffi/pLannotate/releases/download/${PLANNOTATE_VERSION}/BLAST_dbs.tar.gz
+ENV ROOT_DIR=pLannotate/plannotate
+RUN curl -L -o ${ROOT_DIR}/data/BLAST_dbs.tar.gz ${DB_LOC}
+RUN tar -xzf ${ROOT_DIR}/data/BLAST_dbs.tar.gz -C ${ROOT_DIR}/data/
+RUN rm ${ROOT_DIR}/data/BLAST_dbs.tar.gz
+
 WORKDIR $HOME/poly
 
 COPY go.mod go.sum .
@@ -28,4 +35,4 @@ COPY . .
 RUN go test ./...
 
 ENTRYPOINT ["go"]
-CMD ["annotate/annotate.go"]
+#CMD ["annotate/annotate.go"]

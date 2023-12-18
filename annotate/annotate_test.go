@@ -40,8 +40,8 @@ func TestBlast(t *testing.T) {
 	defer logFile.Close()
 
 	hits, err := annotate.Blast(inPath, "snapgene", snapgene_db, logFile)
-	logs, err := os.ReadFile("../../pLannotate/tests/test_data/RRNB_fragment.txt")
-	fmt.Println(logs)
+	logs, err := os.ReadFile("output.log")
+	fmt.Println(string(logs))
 	assert.NoError(t, err)
 	assert.NotEmpty(t, hits)
 }
@@ -52,14 +52,14 @@ func TestAnnotate(t *testing.T) {
 	rrnb, err := RRNB()
 
 	err = annotate.Annotate(rrnb, dbs, false, false)
-	logs, err := os.ReadFile("../../pLannotate/tests/test_data/RRNB_fragment.txt")
-	fmt.Println(logs)
+	logs, err := os.ReadFile("output.log")
+	fmt.Println(string(logs))
 	assert.NoError(t, err)
 	//assert hits.iloc[0]["sseqid"] == "rrnB_T1_terminator"
 
 	err = annotate.Annotate(rrnb, dbs, true, false)
-	logs, err = os.ReadFile("../../pLannotate/tests/test_data/RRNB_fragment.txt")
-	fmt.Println(logs)
+	logs, err = os.ReadFile("output.log")
+	fmt.Println(string(logs))
 	assert.NoError(t, err)
 	//assert hits.iloc[0]["sseqid"] == "rrnB_T1_terminator"
 }

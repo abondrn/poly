@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/TimothyStiles/poly/io/fasta"
 	"gopkg.in/yaml.v3"
@@ -14,7 +15,7 @@ import (
 // Task represents a bioinformatics task.
 type Task interface {
 	// Run takes paths to database/input/output files, and logfile log
-	Run(dbPath, inPath, outPath string, log *os.File) error
+	Run(dbPath, inPath, outPath string, parameters []string, log *os.File) error
 }
 
 // BlastTask represents the BLAST task.
@@ -38,44 +39,49 @@ func CreateTempFasta(seq string) (string, error) {
 	return query.Name(), nil
 }
 
-func (t BlastTask) Run(dbPath, inPath, outPath string, log *os.File) error {
-	flags := "qstart qend sseqid sframe pident slen qseq length sstart send qlen evalue"
-	cmd := exec.Command("blastn", "-task", "blastn-short", "-query", inPath, "-out", outPath,
-		"-db", dbPath, "-outfmt", fmt.Sprintf("6 %s", flags))
+func (t BlastTask) Run(dbPath, inPath, outPath string, parameters []string, log *os.File) error {
+	flags := "6 qstart qend sseqid sframe pident slen qseq length sstart send qlen evalue"
+	args := append(parameters, "-task", "blastn-short", "-query", inPath, "-out", outPath, "-db", dbPath, "-outfmt", flags)
+	cmd := exec.Command("blastn", args...)
 	cmd.Stdout = log
 	cmd.Stderr = log
 
+	log.WriteString(cmd.String())
+	log.WriteString("\n")
 	return cmd.Run()
 }
 
 // DiamondTask represents the Diamond task.
 type DiamondTask struct{}
 
-func (t DiamondTask) Run(dbPath, inPath, outPath string, log *os.File) error {
-	flags := "qstart qend sseqid pident slen qseq length sstart send qlen evalue"
-	cmd := exec.Command("diamond", "blastx", "-d", dbPath, "-q", inPath, "-o", outPath,
-		"--outfmt", fmt.Sprintf("6 %s", flags))
+func (t DiamondTask) Run(dbPath, inPath, outPath string, parameters []string, log *os.File) error {
+	flags := "6 qstart qend sseqid pident slen qseq length sstart send qlen evalue"
+	args := []string{"blastx", "-d", dbPath, "-q", inPath, "-o", outPath, "--outfmt", flags}
+	args = append(args, parameters...)
+	cmd := exec.Command("diamond", args...)
 	cmd.Stdout = log
 	cmd.Stderr = log
 
+	log.WriteString(cmd.String())
+	log.WriteString("\n")
 	return cmd.Run()
 }
 
 // InfernalTask represents the Infernal task.
 type InfernalTask struct{}
 
-func (t InfernalTask) Run(dbPath, inPath, outPath string, log *os.File) error {
+func (t InfernalTask) Run(dbPaths, inPath, outPath string, parameters []string, log *os.File) error {
 	flags := "--cut_ga --rfam --noali --nohmmonly --fmt 2"
-	cmd := exec.Command("cmscan", flags, "--tblout", outPath, "--clanin", dbPath, inPath)
+	dbPathParts := strings.Split(dbPaths, " ")
+	args := append(strings.Split(flags, " "), "--tblout", outPath, "--clanin", dbPathParts[0], dbPathParts[1], inPath)
+	args = append(args, parameters...)
+	cmd := exec.Command("cmscan", args...)
 	cmd.Stdout = log
 	cmd.Stderr = log
 
+	log.WriteString(cmd.String())
+	log.WriteString("\n")
 	return cmd.Run()
-}
-
-func parseInfernal(filename, seq string) error {
-	// Your Infernal parsing logic goes here.
-	return nil
 }
 
 type Database struct {
@@ -107,8 +113,18 @@ func LoadDatabases(path string) (Databases, error) {
 	}
 
 	dir := filepath.Dir(path)
-	for _, v := range parsed {
-		v.Location = filepath.Join(dir, v.Location)
+	for name, v := range parsed {
+		if v.Location == "Default" {
+			loc := filepath.Join(dir, "../BLAST_dbs", name)
+			if v.Method == "infernal" {
+				v.Location = fmt.Sprintf("%s.clanin %s.cm", loc, loc)
+			} else {
+				v.Location = loc
+			}
+		} else {
+			v.Location = filepath.Join(dir, v.Location)
+		}
+		parsed[name] = v
 	}
 
 	return parsed, nil
@@ -139,7 +155,7 @@ func getRawHits(query string, linear bool, dbs Databases) ([]Hit, error) {
 		all_hits = append(all_hits, hits...)
 	}
 	err = os.Remove(inPath)
-	return []Hit{}, err
+	return all_hits, err
 }
 
 func readCSV(filename string) ([]Hit, error) {
@@ -206,16 +222,25 @@ func Blast(query string, name string, db Database, logFile *os.File) ([]Hit, err
 	}
 	defer outFile.Close()
 
-	err = task.Run(db.Location, query, outFile.Name(), logFile)
+	parameters := strings.Split(strings.Join(db.Parameters, " "), " ")
+
+	err = task.Run(db.Location, query, outFile.Name(), parameters, logFile)
 	if err != nil {
 		return []Hit{}, err
 	}
 
+	contents, err := os.ReadFile(outFile.Name())
+	fmt.Println(string(contents))
+
+	hits, err := readCSV(outFile.Name())
+	if err != nil {
+		return []Hit{}, err
+	}
 	err = os.Remove(outFile.Name())
 	if err != nil {
 		return []Hit{}, err
 	}
-	return readCSV(outFile.Name())
+	return hits, err
 }
 
 func Annotate(seq string, dbs Databases, linear bool, isDetailed bool) error {
